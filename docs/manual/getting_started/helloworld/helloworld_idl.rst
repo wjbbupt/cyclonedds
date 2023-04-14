@@ -35,8 +35,7 @@ In our simplistic case, the data type Msg contains two fields:
 ``userID`` and ``message`` payload. The ``userID`` is used to uniquely identify each message instance. This is done using the
 ``@key`` annotation.
 
-IDL Compilers
-=============
+For further information, refer to :ref:`idl_bm`.
 
 .. tabs::
 
@@ -54,23 +53,6 @@ IDL Compilers
            } HelloWorldData_Msg;
 
     .. group-tab:: C++
-
-        The |var-project-short| C++ IDL compiler translates module names into namespaces 
-        and structure names into classes.
-
-        It also generates code for public accessor functions for all fields mentioned in 
-        the IDL struct, separate public constructors, and a destructor:
-
-        -  A default (empty) constructor that recursively invokes the constructors of 
-           all fields.
-        -  A copy-constructor that performs a deep copy from the existing class.
-        -  A move-constructor that moves all arguments to its members.
-
-        The destructor recursively releases all fields. It also generates code for 
-        assignment operators that recursively construct all fields based on the 
-        parameter class (copy and move versions). The following code snippet is 
-        provided without warranty: the internal format may change, but the API
-        delivered to your application code is stable.
 
         .. code-block:: C++
 
@@ -142,14 +124,6 @@ IDL Compilers
 
             }
 
-.. note::
-
-    When translated into a different programming language, the data has another 
-    representation specific to the target language. This highlights the advantage 
-    of using a neutral language such as IDL to describe the data model. It can be
-    translated into different languages that can be shared between different
-    applications written in other programming languages.
-
 Generated files with the IDL compiler
 =====================================
 
@@ -159,7 +133,7 @@ Generated files with the IDL compiler
 
         The IDL compiler is a C program that processes .idl files.
 
-        .. code-block:: bash
+        .. code-block:: console
 
             idlc HelloWorldData.idl
 
@@ -203,7 +177,7 @@ Generated files with the IDL compiler
         languages, but this is seldom relevant to you as a user. You can use
         ``CMake`` recipes as described above or invoke directly:
 
-        .. code-block:: bash
+        .. code-block:: console
 
             idlc -l C++ HelloWorldData.idl
 

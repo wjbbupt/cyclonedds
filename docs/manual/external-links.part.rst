@@ -100,10 +100,6 @@
 
    <a href="https://projects.eclipse.org/proposals/eclipse-iceoryx/" target="_blank">Eclipse iceoryx</a>
 
-.. |url::cunit_link| raw:: html
-
-   <a href="https://cunit.sourceforge.net/" target="_blank">CUnit</a>
-
 .. |url::sphinx_link| raw:: html
 
    <a href="https://www.sphinx-doc.org/en/master/" target="_blank">Sphinx</a>
@@ -181,10 +177,6 @@
  
     <a href="https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/assets/performance/20190730/ping.log" target="_blank">Latency</a>
 
-.. |url::latency| raw:: html
- 
-    <a href="https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/assets/performance/20190730/ping.log" target="_blank">Latency</a>
-
 .. |url::helloworld_cpp_github| raw:: html
  
     <a href="https://github.com/eclipse-cyclonedds/cyclonedds-cxx/tree/master/examples/helloworld" target="_blank">GitHub cyclonedds-cxx/examples/helloworld/</a>
@@ -197,6 +189,18 @@
  
     <a href="https://github.com/eclipse-cyclonedds/cyclonedds/tree/master/src/tools/ddsperf" target="_blank">GitHub ddsperf</a>
 
+.. |url::cpp_api_link| raw:: html
+
+    <a href="https://cyclonedds.io/docs/cyclonedds-cxx/latest/ddscxx" target="_blank">C++ API reference</a>
+
 .. |url::idl_4.2| raw:: html
 
-    <a href"https://www.omg.org/spec/IDL/4.2" target="_blank">OMG IDL</a>
+    <a href="https://www.omg.org/spec/IDL/4.2" target="_blank">OMG IDL</a>
+
+.. |url::py_api_link| raw:: html
+
+    <a href="https://cyclonedds.io/docs/cyclonedds-python/latest/" target="_blank">Python API reference</a>
+
+.. |url::runtype_link| raw:: html
+
+    <a href="https://pypi.org/project/runtype/" target="_blank">runtype</a>
