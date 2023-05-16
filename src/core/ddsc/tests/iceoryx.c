@@ -1,14 +1,13 @@
-/*
- * Copyright(c) 2020 to 2022 ZettaScale Technology and others
- *
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License v. 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
- * v. 1.0 which is available at
- * http://www.eclipse.org/org/documents/edl-v10.php.
- *
- * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
- */
+// Copyright(c) 2020 to 2022 ZettaScale Technology and others
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License v. 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
+// v. 1.0 which is available at
+// http://www.eclipse.org/org/documents/edl-v10.php.
+//
+// SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
+
 #include <assert.h>
 #include <limits.h>
 
@@ -191,7 +190,7 @@ static void check_writer_addrset_helper (const ddsi_xlocator_t *loc, void *varg)
   CU_ASSERT_FATAL (i < arg->nports);
 }
 
-static bool check_writer_addrset (dds_entity_t wrhandle, int nports, const uint32_t ports[nports])
+static bool check_writer_addrset (dds_entity_t wrhandle, int nports, const uint32_t *ports)
 {
   dds_return_t rc;
   struct dds_entity *x;
@@ -350,7 +349,7 @@ static const char *istatestr (dds_instance_state_t s)
   return "nowriters";
 }
 
-static bool alldataseen (struct tracebuf *tb, int nrds, const dds_entity_t rds[nrds], dds_instance_state_t instance_state)
+static bool alldataseen (struct tracebuf *tb, int nrds, const dds_entity_t rds[nrds], const dds_instance_handle_t ihs[nrds], dds_instance_state_t instance_state)
 {
   assert (nrds > 0);
   dds_return_t rc;
@@ -388,9 +387,11 @@ static bool alldataseen (struct tracebuf *tb, int nrds, const dds_entity_t rds[n
         while ((n = dds_take (rdconds[i], &sampleptr, &si, 1, 1)) > 0)
         {
           (void) dds_return_loan (rdconds[i], &sampleptr, n);
-          if (si.instance_state != instance_state)
+          if (si.instance_handle != ihs[i] || si.instance_state != instance_state)
           {
-            print (tb, "[rd %d %s while expecting %s] ", i, istatestr (si.instance_state), istatestr (instance_state));
+            print (tb, "[rd %d %s ihandle %"PRIx64" while expecting %s ihandle %"PRIx64"] ",
+                   i, istatestr (si.instance_state), si.instance_handle,
+                   istatestr (instance_state), ihs[i]);
             fail_instance_state ();
             goto out;
           }
@@ -463,25 +464,82 @@ static int compare_uint32 (const void *va, const void *vb)
   return (*a == *b) ? 0 : (*a < *b) ? -1 : 1;
 }
 
+static void get_data_instance_handles (const dds_entity_t *krds, dds_instance_handle_t *ihs, const void *sample)
+{
+  dds_return_t rc;
+  dds_entity_t ws, rcs[MAX_DOMAINS];
+  dds_entity_t kwr = create_writer (dds_get_topic (krds[0]), false);
+  CU_ASSERT_FATAL (kwr > 0);
+  rc = dds_write (kwr, sample);
+  CU_ASSERT_FATAL (rc == 0);
+  ws = dds_create_waitset (DDS_CYCLONEDDS_HANDLE);
+  CU_ASSERT_FATAL (ws > 0);
+  for (int i = 0; i < MAX_DOMAINS; i++)
+  {
+    ihs[i] = 0;
+    rcs[i] = dds_create_readcondition (krds[i], DDS_NOT_READ_SAMPLE_STATE | DDS_ANY_VIEW_STATE | DDS_ANY_INSTANCE_STATE);
+    CU_ASSERT_FATAL (rcs[i] > 0);
+    rc = dds_waitset_attach (ws, rcs[i], i);
+    CU_ASSERT_FATAL (rc == 0);
+  }
+  int rem = MAX_DOMAINS;
+  while (rem > 0)
+  {
+    dds_attach_t xs[MAX_DOMAINS];
+    int32_t nxs = dds_waitset_wait (ws, xs, MAX_DOMAINS, DDS_INFINITY);
+    CU_ASSERT_FATAL (nxs >= 0);
+    for (int i = 0; i < nxs; i++)
+    {
+      CU_ASSERT_FATAL (ihs[xs[i]] == 0);
+      dds_sample_info_t si;
+      void *raw = NULL;
+      int32_t n = dds_read (krds[xs[i]], &raw, &si, 1, 1);
+      CU_ASSERT_FATAL (n > 0);
+      ihs[xs[i]] = si.instance_handle;
+      rc = dds_return_loan (krds[xs[i]], &raw, n);
+      CU_ASSERT_FATAL (rc == 0);
+      rem--;
+    }
+  }
+  for (int i = 0; i < MAX_DOMAINS; i++)
+  {
+    dds_delete (rcs[i]);
+  }
+  dds_delete (ws);
+  dds_delete (kwr);
+}
+
 static void dotest (const dds_topic_descriptor_t *tpdesc, const void *sample)
 {
   dds_return_t rc;
   dds_entity_t pp[MAX_DOMAINS];
   dds_entity_t tp[MAX_DOMAINS];
+  dds_entity_t ktp[MAX_DOMAINS], krds[MAX_DOMAINS];
+  dds_instance_handle_t ihs[MAX_DOMAINS];
   struct ddsi_domaingv *gvs[MAX_DOMAINS];
 
   const dds_entity_t ws = dds_create_waitset (DDS_CYCLONEDDS_HANDLE);
   CU_ASSERT_FATAL (ws > 0);
 
-  char topicname[100];
+  char topicname[100], ktopicname[100];
   create_unique_topic_name ("test_iceoryx", topicname, sizeof (topicname));
+  create_unique_topic_name ("test_iceoryx", ktopicname, sizeof (ktopicname));
+  dds_qos_t *kqos = dds_create_qos ();
+  dds_qset_reliability(kqos, DDS_RELIABILITY_RELIABLE, DDS_INFINITY);
+  dds_qset_durability (kqos, DDS_DURABILITY_TRANSIENT_LOCAL);
   for (int i = 0; i < MAX_DOMAINS; i++)
   {
     pp[i] = create_participant ((dds_domainid_t) i, true); // FIXME: vary shm_enable for i > 0
+    gvs[i] = get_domaingv (pp[i]);
     tp[i] = dds_create_topic (pp[i], tpdesc, topicname, NULL, NULL);
     CU_ASSERT_FATAL (tp[i] > 0);
-    gvs[i] = get_domaingv (pp[i]);
+    ktp[i] = dds_create_topic (pp[i], tpdesc, ktopicname, kqos, NULL);
+    CU_ASSERT_FATAL (ktp[i] > 0);
+    krds[i] = create_reader (ktp[i], false);
+    CU_ASSERT_FATAL (krds[i] > 0);
   }
+  dds_delete_qos (kqos);
+  get_data_instance_handles (krds, ihs, sample);
 
   for (int wr_use_iceoryx = 0; wr_use_iceoryx <= 1; wr_use_iceoryx++)
   {
@@ -503,6 +561,7 @@ static void dotest (const dds_topic_descriptor_t *tpdesc, const void *sample)
     while (rdmode[MAX_DOMAINS * MAX_READERS_PER_DOMAIN] == 0)
     {
       dds_entity_t rds[MAX_DOMAINS * MAX_READERS_PER_DOMAIN] = { 0 };
+      dds_instance_handle_t rds_ih[MAX_DOMAINS * MAX_READERS_PER_DOMAIN] = { 0 };
       uint32_t ports[MAX_DOMAINS * MAX_READERS_PER_DOMAIN];
       struct tracebuf tb = { .pos = 0 };
       int nrds_active = 0;
@@ -540,6 +599,7 @@ static void dotest (const dds_topic_descriptor_t *tpdesc, const void *sample)
         print (&tb, " %s", (rdmode[i] == 2) ? "iox" : "dds");
 
         rds[i] = create_reader (tp[dom], rdmode[i] == 2);
+        rds_ih[i] = ihs[dom];
         const uint32_t port = reader_unicast_port (rds[i]);
         if (dom == 0)
         {
@@ -631,7 +691,7 @@ static void dotest (const dds_topic_descriptor_t *tpdesc, const void *sample)
         rc = ops[opidx].op (wr, sample);
 
         CU_ASSERT_FATAL (rc == 0);
-        if (!alldataseen (&tb, MAX_READERS_PER_DOMAIN, rds, ops[opidx].istate))
+        if (!alldataseen (&tb, MAX_READERS_PER_DOMAIN, rds, rds_ih, ops[opidx].istate))
         {
           fail_one = true;
           goto next;
@@ -687,6 +747,20 @@ CU_Test(ddsc_iceoryx, one_writer_dynsize, .timeout = 30)
 {
   failed = false;
   dotest (&DynamicData_Msg_desc, &(const DynamicData_Msg){
+    .message = "Muss es sein?",
+    .scalar = 135,
+    .values = {
+      ._length = 4, ._maximum = 4, ._release = false,
+      ._buffer = (int32_t[]) { 193, 272, 54, 277 }
+    }
+  });
+  CU_ASSERT (!failed);
+}
+
+CU_Test(ddsc_iceoryx, one_writer_dynsize_strkey, .timeout = 30)
+{
+  failed = false;
+  dotest (&DynamicData_KMsg_desc, &(const DynamicData_KMsg){
     .message = "Muss es sein?",
     .scalar = 135,
     .values = {

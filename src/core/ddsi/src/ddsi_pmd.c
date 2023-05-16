@@ -1,14 +1,13 @@
-/*
- * Copyright(c) 2006 to 2020 ZettaScale Technology and others
- *
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License v. 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
- * v. 1.0 which is available at
- * http://www.eclipse.org/org/documents/edl-v10.php.
- *
- * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
- */
+// Copyright(c) 2006 to 2020 ZettaScale Technology and others
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License v. 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
+// v. 1.0 which is available at
+// http://www.eclipse.org/org/documents/edl-v10.php.
+//
+// SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
+
 #include <stdlib.h>
 #include <string.h>
 #include "dds/ddsi/ddsi_serdata.h"
@@ -141,7 +140,7 @@ void ddsi_write_pmd_message_xevent_cb (struct ddsi_domaingv *gv, struct ddsi_xev
   ddsi_write_pmd_message (thrst, xp, pp, DDSI_PARTICIPANT_MESSAGE_DATA_KIND_AUTOMATIC_LIVELINESS_UPDATE);
 
   intv = ddsi_participant_get_pmd_interval (pp);
-  if (intv == DDS_INFINITY)
+  if (intv < 0 || intv == DDS_INFINITY)
   {
     tnext.v = DDS_NEVER;
     GVTRACE ("resched pmd("PGUIDFMT"): never\n", PGUID (pp->e.guid));

@@ -1,14 +1,12 @@
-/*
- * Copyright(c) 2019 to 2022 ZettaScale Technology and others
- *
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License v. 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
- * v. 1.0 which is available at
- * http://www.eclipse.org/org/documents/edl-v10.php.
- *
- * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
- */
+// Copyright(c) 2019 to 2022 ZettaScale Technology and others
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License v. 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
+// v. 1.0 which is available at
+// http://www.eclipse.org/org/documents/edl-v10.php.
+//
+// SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
 
 #include <inttypes.h>
 
@@ -140,7 +138,15 @@ static void test_insert(void)
 
     sd->twrite.v = DDS_TIME_INVALID;
 
-    struct ddsi_writer_info wi;
+  struct ddsi_writer_info wi = {
+    .guid = { .prefix = { .u = {1,1,1} }, .entityid = { .u = 0x102 } },
+    .auto_dispose = false,
+    .ownership_strength = 0,
+    .iid = 1
+#ifdef DDS_HAS_LIFESPAN
+    , .lifespan_exp = { DDS_INFINITY }
+#endif
+    };
     const struct ddsi_domaingv *gv = get_gv (pp);
     CU_ASSERT_PTR_NOT_NULL_FATAL(gv);
     if (!gv)

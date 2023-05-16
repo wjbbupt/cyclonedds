@@ -1,14 +1,13 @@
-/*
- * Copyright(c) 2006 to 2021 ZettaScale Technology and others
- *
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License v. 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
- * v. 1.0 which is available at
- * http://www.eclipse.org/org/documents/edl-v10.php.
- *
- * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
- */
+// Copyright(c) 2006 to 2021 ZettaScale Technology and others
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License v. 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
+// v. 1.0 which is available at
+// http://www.eclipse.org/org/documents/edl-v10.php.
+//
+// SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
+
 #ifndef DDS_H
 #define DDS_H
 
@@ -4681,6 +4680,31 @@ dds_get_typeinfo (
 DDS_EXPORT dds_return_t
 dds_free_typeinfo (
   dds_typeinfo_t *type_info);
+
+
+/**
+ * @brief Gets the sertype of an entity
+ *
+ * The provided entity must be a topic or endpoint. This function returns a pointer to
+ * the sertype of the entity. The refcount of the sertype is not incremented. The lifetime
+ * of the returned sertype pointer is at least that of the lifetime of the entity on which
+ * it was invoked.
+ *
+ * @param[in] entity A topic, reader or writer entity
+ * @param[out] sertype A pointer to the entity's sertype is stored in this parameter (see note above on lifetime of this pointer)
+ *
+ * @returns A dds_return_t indicating success or failure.
+ * @retval DDS_RETCODE_OK
+ *             The operation was successful.
+ * @retval DDS_RETCODE_BAD_PARAMETER
+ *             The sertype parameter is NULL
+ * @retval DDS_RETCODE_ILLEGAL_OPERATION
+ *             Not a topic, reader or writer entity
+ */
+DDS_EXPORT dds_return_t
+dds_get_entity_sertype (
+  dds_entity_t entity,
+  const struct ddsi_sertype **sertype);
 
 #if defined (__cplusplus)
 }

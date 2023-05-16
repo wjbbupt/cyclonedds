@@ -1,14 +1,13 @@
-/*
- * Copyright(c) 2023 ZettaScale Technology and others
- *
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License v. 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
- * v. 1.0 which is available at
- * http://www.eclipse.org/org/documents/edl-v10.php.
- *
- * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
- */
+// Copyright(c) 2023 ZettaScale Technology and others
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License v. 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
+// v. 1.0 which is available at
+// http://www.eclipse.org/org/documents/edl-v10.php.
+//
+// SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
+
 #include <assert.h>
 #include <string.h>
 #include "dds/dds.h"
@@ -465,8 +464,9 @@ dds_return_t ddsi_dynamic_type_add_struct_member (struct ddsi_type *type, struct
   memset (m, 0, sizeof (*m));
   m->type = *member_type;
   m->id = member_id;
+  m->flags = DDS_XTypes_TRY_CONSTRUCT_DISCARD;
   if (params.is_key)
-    m->flags = DDS_XTypes_IS_KEY;
+    m->flags |= DDS_XTypes_IS_KEY;
   (void) ddsrt_strlcpy (m->detail.name, params.name, sizeof (m->detail.name));
 
   return DDS_RETCODE_OK;
@@ -542,8 +542,9 @@ dds_return_t ddsi_dynamic_type_add_union_member (struct ddsi_type *type, struct 
   m->type = *member_type;
   m->id = member_id;
   (void) ddsrt_strlcpy (m->detail.name, params.name, sizeof (m->detail.name));
+  m->flags = DDS_XTypes_TRY_CONSTRUCT_DISCARD;
   if (params.is_default)
-    m->flags = DDS_XTypes_IS_DEFAULT;
+    m->flags |= DDS_XTypes_IS_DEFAULT;
   else
   {
     assert (sizeof (*m->label_seq._buffer) == sizeof (*params.labels));

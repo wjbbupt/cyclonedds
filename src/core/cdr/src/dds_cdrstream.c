@@ -1,14 +1,13 @@
-/*
- * Copyright(c) 2006 to 2022 ZettaScale Technology and others
- *
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License v. 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
- * v. 1.0 which is available at
- * http://www.eclipse.org/org/documents/edl-v10.php.
- *
- * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
- */
+// Copyright(c) 2006 to 2022 ZettaScale Technology and others
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License v. 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
+// v. 1.0 which is available at
+// http://www.eclipse.org/org/documents/edl-v10.php.
+//
+// SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
+
 #include <assert.h>
 #include <string.h>
 #include <ctype.h>
@@ -372,9 +371,18 @@ static void dds_stream_swap (void * __restrict vbuf, uint32_t size, uint32_t num
       break;
     }
     case 8: {
-      uint64_t *buf = vbuf;
-      for (uint32_t i = 0; i < num; i++)
-        buf[i] = ddsrt_bswap8u (buf[i]);
+      uint32_t *buf = vbuf;
+      // max size of sample is 4GB or thereabouts, so a 64-bit int or double
+      // array or sequence can never have more than 0.5G elements
+      //
+      // need to byte-swap using 32-bit elements because of XCDR2 droping the
+      // natural alignment requirement
+      for (uint32_t i = 0; i < num; i++) {
+        uint32_t a = ddsrt_bswap4u (buf[2*i]);
+        uint32_t b = ddsrt_bswap4u (buf[2*i+1]);
+        buf[2*i] = b;
+        buf[2*i+1] = a;
+      }
       break;
     }
   }
@@ -2218,13 +2226,16 @@ static inline bool read_and_normalize_uint64 (uint64_t * __restrict val, char * 
 {
   if ((*off = check_align_prim (*off, size, xcdr_version == DDSI_RTPS_CDR_ENC_VERSION_2 ? 2 : 3, 3)) == UINT32_MAX)
     return false;
+  union { uint32_t u32[2]; uint64_t u64; } u;
+  u.u32[0] = * (uint32_t *) (data + *off);
+  u.u32[1] = * ((uint32_t *) (data + *off) + 1);
   if (bswap)
   {
-    uint32_t x = ddsrt_bswap4u (* (uint32_t *) (data + *off));
-    *((uint32_t *) (data + *off)) = ddsrt_bswap4u (* ((uint32_t *) (data + *off) + 1));
-    *((uint32_t *) (data + *off) + 1) = x;
+    u.u64 = ddsrt_bswap8u (u.u64);
+    *((uint32_t *) (data + *off)) = u.u32[0];
+    *((uint32_t *) (data + *off) + 1) = u.u32[1];
   }
-  *val = *((uint64_t *) (data + *off));
+  *val = u.u64;
   (*off) += 8;
   return true;
 }
@@ -2352,37 +2363,21 @@ static bool normalize_primarray (char * __restrict data, uint32_t * __restrict o
       if ((*off = check_align_prim_many (*off, size, 1, 1, num)) == UINT32_MAX)
         return false;
       if (bswap)
-      {
-        uint16_t *xs = (uint16_t *) (data + *off);
-        for (uint32_t i = 0; i < num; i++)
-          xs[i] = ddsrt_bswap2u (xs[i]);
-      }
+        dds_stream_swap (data + *off, 2, num);
       *off += 2 * num;
       return true;
     case DDS_OP_VAL_4BY:
       if ((*off = check_align_prim_many (*off, size, 2, 2, num)) == UINT32_MAX)
         return false;
       if (bswap)
-      {
-        uint32_t *xs = (uint32_t *) (data + *off);
-        for (uint32_t i = 0; i < num; i++)
-          xs[i] = ddsrt_bswap4u (xs[i]);
-      }
+        dds_stream_swap (data + *off, 4, num);
       *off += 4 * num;
       return true;
     case DDS_OP_VAL_8BY:
       if ((*off = check_align_prim_many (*off, size, xcdr_version == DDSI_RTPS_CDR_ENC_VERSION_2 ? 2 : 3, 3, num)) == UINT32_MAX)
         return false;
       if (bswap)
-      {
-        uint64_t *xs = (uint64_t *) (data + *off);
-        for (uint32_t i = 0; i < num; i++)
-        {
-          uint32_t x = ddsrt_bswap4u (* (uint32_t *) &xs[i]);
-          *(uint32_t *) &xs[i] = ddsrt_bswap4u (* (((uint32_t *) &xs[i]) + 1));
-          *(((uint32_t *) &xs[i]) + 1) = x;
-        }
-      }
+        dds_stream_swap (data + *off, 8, num);
       *off += 8 * num;
       return true;
     default:
@@ -3072,7 +3067,7 @@ bool dds_stream_normalize (void * __restrict data, uint32_t size, bool bswap, ui
 static const uint32_t *dds_stream_free_sample_seq (char * __restrict addr, const struct dds_cdrstream_allocator * __restrict allocator, const uint32_t * __restrict ops, uint32_t insn)
 {
   dds_sequence_t * const seq = (dds_sequence_t *) addr;
-  uint32_t num = (seq->_maximum > seq->_length) ? seq->_maximum : seq->_length;
+  uint32_t num = (seq->_buffer == NULL) ? 0 : (seq->_maximum > seq->_length) ? seq->_maximum : seq->_length;
   const enum dds_stream_typecode subtype = DDS_OP_SUBTYPE (insn);
   uint32_t bound_op = seq_is_bounded (DDS_OP_TYPE (insn)) ? 1 : 0;
   if ((seq->_release && num) || subtype > DDS_OP_VAL_STR)

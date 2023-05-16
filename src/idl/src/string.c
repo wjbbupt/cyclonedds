@@ -1,14 +1,12 @@
-/*
- * Copyright(c) 2021 ZettaScale Technology and others
- *
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License v. 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
- * v. 1.0 which is available at
- * http://www.eclipse.org/org/documents/edl-v10.php.
- *
- * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
- */
+// Copyright(c) 2021 ZettaScale Technology and others
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License v. 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
+// v. 1.0 which is available at
+// http://www.eclipse.org/org/documents/edl-v10.php.
+//
+// SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
 
 /*
  * Locale-independent C runtime functions, like strtoull_l and strtold_l, are
@@ -92,11 +90,11 @@ int idl_isdigit(int chr, int base)
   int num = -1;
   assert(base > 0 && base < 36);
   if (chr >= '0' && chr <= '9')
-    num = chr - '0';
+    num = (char) chr - '0';
   else if (chr >= 'a' && chr <= 'z')
-    num = chr - 'a';
+    num = (char) chr - 'a';
   else if (chr >= 'A' && chr <= 'Z')
-    num = chr - 'A';
+    num = (char) chr - 'A';
   return num != -1 && num < base ? num : -1;
 }
 

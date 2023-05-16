@@ -1,14 +1,13 @@
-/*
- * Copyright(c) 2006 to 2022 ZettaScale Technology and others
- *
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License v. 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
- * v. 1.0 which is available at
- * http://www.eclipse.org/org/documents/edl-v10.php.
- *
- * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
- */
+// Copyright(c) 2006 to 2022 ZettaScale Technology and others
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License v. 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
+// v. 1.0 which is available at
+// http://www.eclipse.org/org/documents/edl-v10.php.
+//
+// SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
+
 #ifndef DDS__QOS_H
 #define DDS__QOS_H
 
@@ -53,7 +52,7 @@ extern "C" {
    DDSI_QP_LIFESPAN | DDSI_QP_DESTINATION_ORDER | DDSI_QP_HISTORY |                         \
    DDSI_QP_RESOURCE_LIMITS | DDSI_QP_ADLINK_WRITER_DATA_LIFECYCLE |                         \
    DDSI_QP_CYCLONE_IGNORELOCAL | DDSI_QP_PROPERTY_LIST | DDSI_QP_DATA_REPRESENTATION |      \
-   DDSI_QP_ENTITY_NAME)
+   DDSI_QP_ENTITY_NAME | DDSI_QP_CYCLONE_WRITER_BATCHING)
 
 /** @component qos_obj */
 dds_return_t dds_ensure_valid_data_representation (dds_qos_t *qos, uint32_t allowed_data_representations, bool topicqos);

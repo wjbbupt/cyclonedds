@@ -1,14 +1,12 @@
-/*
- * Copyright(c) 2006 to 2021 ZettaScale Technology and others
- *
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License v. 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
- * v. 1.0 which is available at
- * http://www.eclipse.org/org/documents/edl-v10.php.
- *
- * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
- */
+// Copyright(c) 2006 to 2021 ZettaScale Technology and others
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License v. 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
+// v. 1.0 which is available at
+// http://www.eclipse.org/org/documents/edl-v10.php.
+//
+// SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
 
 #include <assert.h>
 #include <string.h>
@@ -41,7 +39,9 @@ DDS_Security_BinaryProperty_deinit(
     }
 
     ddsrt_free(p->name);
-    memset (p->value._buffer, 0, p->value._length); /* because key material can be stored in binary property */
+    if (p->value._length > 0) {
+        memset (p->value._buffer, 0, p->value._length); /* because key material can be stored in binary property */
+    }
     ddsrt_free(p->value._buffer);
 }
 

@@ -1,14 +1,13 @@
-/*
- * Copyright (c) 2022 ZettaScale Technology and others
- *
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License v. 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
- * v. 1.0 which is available at
- * http://www.eclipse.org/org/documents/edl-v10.php.
- *
- * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
- */
+// Copyright (c) 2022 ZettaScale Technology and others
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License v. 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
+// v. 1.0 which is available at
+// http://www.eclipse.org/org/documents/edl-v10.php.
+//
+// SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
+
 #include <assert.h>
 #include <limits.h>
 
@@ -233,6 +232,7 @@ int main (int argc, char **argv)
   dds_free_typeobj (ptr);
   dds_get_typeinfo (1, ptr);
   dds_free_typeinfo (ptr);
+  dds_get_entity_sertype (1, ptr);
 
   // dds_data_allocator.h
   dds_data_allocator_init (1, ptr);
@@ -350,6 +350,7 @@ int main (int argc, char **argv)
   dds_qset_destination_order (ptr, 0);
   dds_qset_writer_data_lifecycle (ptr, 0);
   dds_qset_reader_data_lifecycle (ptr, 0, 0);
+  dds_qset_writer_batching (ptr, 0);
   dds_qset_durability_service (ptr, 0, 0, 0, 0, 0, 0);
   dds_qset_ignorelocal (ptr, 0);
   dds_qset_prop (ptr, ptr2, ptr3);
@@ -379,6 +380,7 @@ int main (int argc, char **argv)
   dds_qget_destination_order (ptr, 0);
   dds_qget_writer_data_lifecycle (ptr, ptr);
   dds_qget_reader_data_lifecycle (ptr, ptr, ptr);
+  dds_qget_writer_batching (ptr, ptr);
   dds_qget_durability_service (ptr, ptr, 0, ptr, ptr, ptr, ptr);
   dds_qget_ignorelocal (ptr, 0);
   dds_qget_propnames (ptr, ptr, ptr);

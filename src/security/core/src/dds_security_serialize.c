@@ -1,15 +1,12 @@
-/*
- * Copyright(c) 2006 to 2020 ZettaScale Technology and others
- *
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License v. 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
- * v. 1.0 which is available at
- * http://www.eclipse.org/org/documents/edl-v10.php.
- *
- * SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
- */
-
+// Copyright(c) 2006 to 2020 ZettaScale Technology and others
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License v. 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0, or the Eclipse Distribution License
+// v. 1.0 which is available at
+// http://www.eclipse.org/org/documents/edl-v10.php.
+//
+// SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
 
 #include <assert.h>
 #include <string.h>
@@ -270,10 +267,12 @@ DDS_Security_Serialize_OctetSeq(
      DDS_Security_Serializer ser,
      const DDS_Security_OctetSeq *seq)
 {
-     DDS_Security_Serialize_uint32_t(ser, seq->_length);
-     serbuffer_adjust_size(ser, seq->_length);
-     memcpy(&(ser->buffer[ser->offset]), seq->_buffer, seq->_length);
-     ser->offset += seq->_length;
+    DDS_Security_Serialize_uint32_t(ser, seq->_length);
+    if (seq->_length) {
+        serbuffer_adjust_size(ser, seq->_length);
+        memcpy(&(ser->buffer[ser->offset]), seq->_buffer, seq->_length);
+        ser->offset += seq->_length;
+    }
 }
 
 static void
